@@ -100,6 +100,7 @@ export class Game extends Scene {
         // Game over condition
         this.physics.world.on('worldbounds', (body: Phaser.Physics.Arcade.Body, up: boolean, down: boolean) => {
             if (down && body === ballBody) {
+                this.gameStarted = false; // Reset gameStarted flag
                 this.scene.start('GameOver');
             }
         });
@@ -108,9 +109,12 @@ export class Game extends Scene {
     private startBall() {
         if (!this.gameStarted) {
             this.gameStarted = true;
+            const ballBody = this.ball.body as Phaser.Physics.Arcade.Body;
+            // Reset ball position to paddle
+            ballBody.x = this.paddle.x;
+            ballBody.y = this.paddle.y - 20; // Position it above the paddle
             const angle = Phaser.Math.Between(-45, 45);
             const velocity = this.physics.velocityFromAngle(angle - 90, this.ballSpeed);
-            const ballBody = this.ball.body as Phaser.Physics.Arcade.Body;
             ballBody.setVelocity(velocity.x, velocity.y);
         }
     }
