@@ -83,9 +83,17 @@ export class Game extends Scene {
         });
 
         // Start game on click
-        this.input.on('pointerdown', () => {
+        this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
             if (!this.gameStarted) {
                 this.startBall();
+            }
+
+            // Move paddle based on pointer position
+            const paddleBody = this.paddle.body as Phaser.Physics.Arcade.Body;
+            if (pointer.x < this.cameras.main.width / 2) {
+                paddleBody.setVelocityX(-this.paddleSpeed); // Move left
+            } else {
+                paddleBody.setVelocityX(this.paddleSpeed); // Move right
             }
         });
 
@@ -127,6 +135,15 @@ export class Game extends Scene {
         // Handle keyboard input
         const paddleBody = this.paddle.body as Phaser.Physics.Arcade.Body;
         paddleBody.setVelocityX(0); // Reset velocity
+
+        // Check mouse position for paddle movement
+        if (this.input.activePointer.isDown) {
+            if (this.input.x < this.cameras.main.width / 2) {
+                paddleBody.setVelocityX(-this.paddleSpeed); // Move left
+            } else {
+                paddleBody.setVelocityX(this.paddleSpeed); // Move right
+            }
+        }
 
         if (this.cursors.left.isDown || this.keys.A.isDown) {
             paddleBody.setVelocityX(-this.paddleSpeed);
