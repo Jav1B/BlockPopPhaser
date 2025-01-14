@@ -1,4 +1,5 @@
 import { Scene } from 'phaser';
+import { blockTypes } from '../data/blocks'; // Import the block types
 
 export class Game extends Scene {
     private paddle: Phaser.GameObjects.Rectangle;
@@ -47,19 +48,30 @@ export class Game extends Scene {
             D: Phaser.Input.Keyboard.KeyCodes.D
         }) as { A: Phaser.Input.Keyboard.Key; D: Phaser.Input.Keyboard.Key };
 
-        // Create blocks
+        // Create blocks using the block types
         this.blocks = [];
         for (let i = 0; i < 5; i++) {
             for (let j = 0; j < 8; j++) {
+                const blockType = blockTypes[(i * 8 + j) % blockTypes.length]; // Cycle through block types
                 const block = this.add.rectangle(
                     164 + j * 100,
                     100 + i * 30,
                     80,
                     20,
-                    0xff0000
+                    blockType.color
                 );
+                block.setData('hp', blockType.hp); // Store HP in block data
                 this.physics.add.existing(block, true);
                 this.blocks.push(block);
+
+                // Create text to display HP
+                const hpText = this.add.text(block.x, block.y, blockType.hp.toString(), {
+                    fontSize: '16px',
+                    fill: '#ffffff'
+                }).setOrigin(0.5); // Center the text
+
+                // Store the text object in the block's data
+                block.setData('hpText', hpText);
             }
         }
 
@@ -68,10 +80,23 @@ export class Game extends Scene {
         
         this.blocks.forEach(block => {
             this.physics.add.collider(this.ball, block, () => {
-                block.destroy();
-                const index = this.blocks.indexOf(block);
-                if (index > -1) {
-                    this.blocks.splice(index, 1);
+                const currentHP = block.getData('hp');
+                if (currentHP > 0) {
+                    const newHP = currentHP - 1; // Reduce HP by 1
+                    block.setData('hp', newHP); // Update HP in block data
+                    
+                    // Update the text to reflect the new HP
+                    const hpText = block.getData('hpText');
+                    hpText.setText(newHP.toString());
+
+                    if (newHP <= 0) {
+                        block.destroy(); // Destroy block if HP is 0
+                        hpText.destroy(); // Destroy the text object
+                        const index = this.blocks.indexOf(block);
+                        if (index > -1) {
+                            this.blocks.splice(index, 1);
+                        }
+                    }
                 }
             }, undefined, this);
         });
