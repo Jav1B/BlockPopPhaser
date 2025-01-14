@@ -14,6 +14,8 @@ export class Game extends Scene {
         A: Phaser.Input.Keyboard.Key;
         D: Phaser.Input.Keyboard.Key;
     };
+    private playerMoney: number = 0; // Add a variable to track player money
+    private moneyText: Phaser.GameObjects.Text; // Text object to display money
 
     constructor() {
         super('Game');
@@ -48,6 +50,12 @@ export class Game extends Scene {
             D: Phaser.Input.Keyboard.KeyCodes.D
         }) as { A: Phaser.Input.Keyboard.Key; D: Phaser.Input.Keyboard.Key };
 
+        // Initialize money display
+        this.moneyText = this.add.text(16, 16, `💰 Money: ${this.playerMoney}`, {
+            fontSize: '20px',
+            fill: '#ffffff'
+        });
+
         // Create blocks using the block types
         this.blocks = [];
         for (let i = 0; i < 5; i++) {
@@ -61,6 +69,7 @@ export class Game extends Scene {
                     blockType.color
                 );
                 block.setData('hp', blockType.hp); // Store HP in block data
+                block.setData('totalHP', blockType.hp); // Store total HP in block data
                 this.physics.add.existing(block, true);
                 this.blocks.push(block);
 
@@ -81,6 +90,7 @@ export class Game extends Scene {
         this.blocks.forEach(block => {
             this.physics.add.collider(this.ball, block, () => {
                 const currentHP = block.getData('hp');
+                const totalHP = block.getData('totalHP'); // Get the total HP of the block
                 if (currentHP > 0) {
                     const newHP = currentHP - 1; // Reduce HP by 1
                     block.setData('hp', newHP); // Update HP in block data
@@ -90,6 +100,10 @@ export class Game extends Scene {
                     hpText.setText(newHP.toString());
 
                     if (newHP <= 0) {
+                        // Update player money when block is destroyed using total HP
+                        this.playerMoney += totalHP; // Add total HP to player money
+                        this.moneyText.setText(`💰 Money: ${this.playerMoney}`); // Update money display
+
                         block.destroy(); // Destroy block if HP is 0
                         hpText.destroy(); // Destroy the text object
                         const index = this.blocks.indexOf(block);
