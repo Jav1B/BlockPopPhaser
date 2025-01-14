@@ -16,6 +16,7 @@ export class Game extends Scene {
     };
     private playerMoney: number = 0; // Add a variable to track player money
     private moneyText: Phaser.GameObjects.Text; // Text object to display money
+    private static MONEY_KEY = 'playerMoney'; // Key for local storage
 
     constructor() {
         super('Game');
@@ -49,6 +50,9 @@ export class Game extends Scene {
             A: Phaser.Input.Keyboard.KeyCodes.A,
             D: Phaser.Input.Keyboard.KeyCodes.D
         }) as { A: Phaser.Input.Keyboard.Key; D: Phaser.Input.Keyboard.Key };
+
+        // Load player money from local storage
+        this.loadPlayerMoney();
 
         // Initialize money display
         this.moneyText = this.add.text(16, 16, `💰 Money: ${this.playerMoney}`, {
@@ -101,8 +105,7 @@ export class Game extends Scene {
 
                     if (newHP <= 0) {
                         // Update player money when block is destroyed using total HP
-                        this.playerMoney += totalHP; // Add total HP to player money
-                        this.moneyText.setText(`💰 Money: ${this.playerMoney}`); // Update money display
+                        this.updatePlayerMoney(totalHP); // Use the new method to update money
 
                         block.destroy(); // Destroy block if HP is 0
                         hpText.destroy(); // Destroy the text object
@@ -199,5 +202,29 @@ export class Game extends Scene {
         if (this.blocks.length === 0) {
             this.scene.start('GameOver');
         }
+    }
+
+    private loadPlayerMoney() {
+        const savedMoney = localStorage.getItem(Game.MONEY_KEY);
+        if (savedMoney) {
+            this.playerMoney = parseInt(savedMoney, 10);
+        }
+    }
+
+    private savePlayerMoney() {
+        localStorage.setItem(Game.MONEY_KEY, this.playerMoney.toString());
+    }
+
+    // Update player money and save it
+    private updatePlayerMoney(amount: number) {
+        this.playerMoney += amount;
+        this.savePlayerMoney(); // Save updated money
+        this.moneyText.setText(`💰 Money: ${this.playerMoney}`); // Update money display
+    }
+
+    // Optionally clear money on game over
+    private onGameOver() {
+        localStorage.removeItem(Game.MONEY_KEY); // Clear saved money
+        this.scene.start('GameOver');
     }
 }
